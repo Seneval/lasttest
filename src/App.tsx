@@ -20,6 +20,7 @@ const App = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message }),
       });
+
       if (!res.ok) {
         throw new Error(`Server error: ${res.status}`);
       }
@@ -37,14 +38,16 @@ const App = () => {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Chat with Assistant</h1>
-      <div className="space-y-4 mb-4">
-        {messages.map((msg, idx) => (
-          <ChatMessage key={idx} role={msg.role} content={msg.content} />
-        ))}
+    <div className="min-h-screen flex items-center justify-center bg-gloomy-background text-gloomy-text font-gloomy">
+      <div className="w-full max-w-2xl bg-gloomy-background shadow-lg rounded-lg p-6 border border-gloomy-accent">
+        <h1 className="text-3xl font-bold mb-6 text-gloomy-text">Gloomy Bot</h1>
+        <div className="space-y-4 mb-4 overflow-y-auto max-h-[60vh]">
+          {messages.map((msg, idx) => (
+            <ChatMessage key={idx} role={msg.role} content={msg.content} />
+          ))}
+        </div>
+        <ChatInput onSend={handleSend} />
       </div>
-      <ChatInput onSend={handleSend} />
     </div>
   );
 };
