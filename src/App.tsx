@@ -1,35 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import ChatInput from './components/ChatInput';
+import ChatMessage from './components/ChatMessage';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
-export default App
+const App = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  const handleSend = async (message: string) => {
+    const userMessage: Message = { role: 'user', content: message };
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      const res = await fetch('/.netlify/functions/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.response) {
+        const assistantMessage: Message = { role: 'assistant', content: data.response };
+        setMessages((prev) => [...prev, assistantMessage]);
+      } else {
+        console.error('Function error:', data.error);
+      }
+    } catch (error) {
+      console.error('Error communicating with OpenAI:', error);
+    }
+  };
+
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Chat with Assistant</h1>
+      <div className="space-y-4 mb-4">
+        {messages.map((msg, idx) => (
+          <ChatMessage key={idx} role={msg.role} content={msg.content} />
+        ))}
+      </div>
+      <ChatInput onSend={handleSend} />
+    </div>
+  );
+};
+
+export default App;
